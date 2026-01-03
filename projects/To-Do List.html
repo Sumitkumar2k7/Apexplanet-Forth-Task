@@ -52,15 +52,15 @@ header{
   border-radius:6px;
   cursor:pointer;
 }
-input,select{
+input{
   padding:.6rem;
   width:100%;
   margin:.4rem 0;
 }
 .add-box{
-  display:grid;
-  grid-template-columns:1fr 150px 120px;
+  display:flex;
   gap:.5rem;
+  margin-top:1rem;
 }
 .stats{
   display:flex;
@@ -82,9 +82,6 @@ li.completed span{
   text-decoration:line-through;
   opacity:.6;
 }
-.high{border-left:6px solid red;}
-.medium{border-left:6px solid orange;}
-.low{border-left:6px solid green;}
 .actions i{
   margin-left:.6rem;
   cursor:pointer;
@@ -109,11 +106,6 @@ li.completed span{
 
   <div class="add-box">
     <input type="text" id="taskInput" placeholder="Write your task...">
-    <select id="priority">
-      <option value="high">High</option>
-      <option value="medium" selected>Medium</option>
-      <option value="low">Low</option>
-    </select>
     <button onclick="addTask()" style="background:#4caf50;color:white">Add</button>
   </div>
 
@@ -142,7 +134,6 @@ function addTask(){
   tasks.push({
     id:Date.now(),
     text,
-    priority:priority.value,
     completed:false,
     date:new Date().toLocaleString()
   });
@@ -190,7 +181,7 @@ function render(){
 
   filtered.forEach(t=>{
     let li = document.createElement("li");
-    li.className = `${t.priority} ${t.completed?"completed":""}`;
+    li.className = `${t.completed?"completed":""}`;
     li.innerHTML = `
       <span>
         <b>${t.text}</b><br>
