@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Listing</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root{
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#222;
+}
+body.dark{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --text:#f5f5f5;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  background:linear-gradient(135deg,#2196F3,#0d47a1);
+  color:white;
+  padding:1rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.container{
+  max-width:1200px;
+  margin:2rem auto;
+  padding:1rem;
+}
+.filters{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1rem;
+  margin-bottom:1.5rem;
+}
+input,select{
+  padding:.6rem;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;
+}
+.card{
+  background:var(--card);
+  padding:1.2rem;
+  border-radius:12px;
+  box-shadow:0 10px 20px rgba(0,0,0,.15);
+  transition:.3s;
+}
+.card:hover{transform:translateY(-6px);}
+.badge{
+  background:red;
+  color:white;
+  padding:.2rem .6rem;
+  font-size:.8rem;
+  border-radius:4px;
+}
+.rating{color:gold;}
+.price{font-weight:bold;font-size:1.1rem;}
+.stock{font-size:.9rem;}
+.card button{
+  width:100%;
+  padding:.6rem;
+  border:none;
+  border-radius:6px;
+  background:#2196F3;
+  color:white;
+  cursor:pointer;
+}
+.card button:disabled{
+  background:gray;
+  cursor:not-allowed;
+}
+.cart-badge{
+  background:red;
+  padding:.3rem .6rem;
+  border-radius:50%;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🛒Product Listing</h1>
+  <div>
+    Cart <span id="cartCount" class="cart-badge">0</span>
+    <button onclick="toggleTheme()">🌙</button>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="filters">
+  <input type="text" id="search" placeholder="Search products">
+  <select id="category">
+    <option value="">All Categories</option>
+    <option value="electronics">Electronics</option>
+    <option value="fashion">Fashion</option>
+    <option value="books">Books</option>
+  </select>
+  <select id="sort">
+    <option value="">Sort By</option>
+    <option value="priceLow">Price Low → High</option>
+    <option value="priceHigh">Price High → Low</option>
+    <option value="rating">Rating</option>
+    <option value="name">Name A → Z</option>
+  </select>
+</div>
+
+<div class="grid" id="products"></div>
+
+</div>
+
+<script>
+const productsData=[
+{id:1,name:"Laptop",cat:"electronics",price:50000,rating:4.5,desc:"High performance laptop",stock:true,discount:10},
+{id:2,name:"Smartphone",cat:"electronics",price:20000,rating:4.2,desc:"Latest Android phone",stock:true,discount:5},
+{id:3,name:"Headphones",cat:"electronics",price:1500,rating:3.9,desc:"Noise cancelling",stock:false,discount:0},
+{id:4,name:"T-Shirt",cat:"fashion",price:500,rating:4.0,desc:"Cotton casual wear",stock:true,discount:20},
+{id:5,name:"Jeans",cat:"fashion",price:1200,rating:4.3,desc:"Slim fit denim",stock:true,discount:15},
+{id:6,name:"JavaScript Book",cat:"books",price:300,rating:4.8,desc:"Beginner to Advanced",stock:true,discount:25},
+{id:7,name:"Python Book",cat:"books",price:450,rating:4.6,desc:"Programming guide",stock:false,discount:0},
+{id:8,name:"Smart Watch",cat:"electronics",price:3500,rating:4.1,desc:"Fitness tracking watch",stock:true,discount:12}
+];
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let theme = localStorage.getItem("theme") || "light";
+document.body.className = theme==="dark"?"dark":"";
+
+function toggleTheme(){
+ document.body.classList.toggle("dark");
+ localStorage.setItem("theme",
+ document.body.classList.contains("dark")?"dark":"light");
+}
+
+function render(){
+ let s = search.value.toLowerCase();
+ let c = category.value;
+ let list = productsData.filter(p =>
+   p.name.toLowerCase().includes(s) &&
+   (c==="" || p.cat===c)
+ );
+
+ if(sort.value==="priceLow") list.sort((a,b)=>a.price-b.price);
+ if(sort.value==="priceHigh") list.sort((a,b)=>b.price-a.price);
+ if(sort.value==="rating") list.sort((a,b)=>b.rating-a.rating);
+ if(sort.value==="name") list.sort((a,b)=>a.name.localeCompare(b.name));
+
+ products.innerHTML="";
+ list.forEach(p=>{
+   products.innerHTML+=`
+   <div class="card">
+     ${p.discount?`<span class="badge">${p.discount}% OFF</span>`:""}
+     <h3>${p.name}</h3>
+     <p>${p.desc}</p>
+     <div class="rating">${"★".repeat(Math.round(p.rating))}</div>
+     <p class="price">₹${p.price}</p>
+     <p class="stock">${p.stock?"✅ In Stock":"❌ Out of Stock"}</p>
+     <button ${!p.stock?"disabled":""} onclick="addToCart(${p.id})">
+       Add to Cart
+     </button>
+   </div>`;
+ });
+
+ cartCount.textContent = cart.length;
+}
+
+function addToCart(id){
+ cart.push(productsData.find(p=>p.id===id));
+ localStorage.setItem("cart",JSON.stringify(cart));
+ render();
+}
+
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",render));
+render();
+</script>
+
+</body>
+</html>

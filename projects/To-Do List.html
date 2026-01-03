@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>To-Do / Notes App</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root{
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#333;
+}
+body.dark{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --text:#f5f5f5;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:Segoe UI, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  transition:.3s;
+}
+header{
+  background:linear-gradient(135deg,#4caf50,#2e7d32);
+  color:white;
+  padding:1rem;
+  text-align:center;
+}
+.container{
+  max-width:900px;
+  margin:2rem auto;
+  background:var(--card);
+  padding:2rem;
+  border-radius:12px;
+  box-shadow:0 15px 30px rgba(0,0,0,.1);
+}
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+.top-bar button{
+  padding:.5rem 1rem;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+input,select{
+  padding:.6rem;
+  width:100%;
+  margin:.4rem 0;
+}
+.add-box{
+  display:grid;
+  grid-template-columns:1fr 150px 120px;
+  gap:.5rem;
+}
+.stats{
+  display:flex;
+  gap:1rem;
+  margin:1rem 0;
+  font-weight:bold;
+}
+ul{list-style:none;padding:0;}
+li{
+  background:rgba(0,0,0,.04);
+  padding:1rem;
+  margin:.5rem 0;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+li.completed span{
+  text-decoration:line-through;
+  opacity:.6;
+}
+.high{border-left:6px solid red;}
+.medium{border-left:6px solid orange;}
+.low{border-left:6px solid green;}
+.actions i{
+  margin-left:.6rem;
+  cursor:pointer;
+}
+.actions i:hover{transform:scale(1.2);}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🚀To-Do / Notes App</h1>
+</header>
+
+<div class="container">
+
+  <div class="top-bar">
+    <input type="text" id="search" placeholder="🔍 Search task...">
+    <button onclick="toggleTheme()">🌙 Toggle Theme</button>
+    <button onclick="clearAll()" style="background:red;color:white">Clear All</button>
+  </div>
+
+  <div class="add-box">
+    <input type="text" id="taskInput" placeholder="Write your task...">
+    <select id="priority">
+      <option value="high">High</option>
+      <option value="medium" selected>Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <button onclick="addTask()" style="background:#4caf50;color:white">Add</button>
+  </div>
+
+  <div class="stats">
+    <div>Total: <span id="total">0</span></div>
+    <div>Completed: <span id="done">0</span></div>
+    <div>Pending: <span id="pending">0</span></div>
+  </div>
+
+  <ul id="taskList"></ul>
+
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let theme = localStorage.getItem("theme") || "light";
+document.body.className = theme==="dark"?"dark":"";
+
+function save(){
+  localStorage.setItem("tasks",JSON.stringify(tasks));
+}
+
+function addTask(){
+  let text = taskInput.value.trim();
+  if(!text) return alert("Enter task");
+  tasks.push({
+    id:Date.now(),
+    text,
+    priority:priority.value,
+    completed:false,
+    date:new Date().toLocaleString()
+  });
+  taskInput.value="";
+  save();
+  render();
+}
+
+function toggleComplete(id){
+  tasks = tasks.map(t=>t.id===id?{...t,completed:!t.completed}:t);
+  save();render();
+}
+
+function editTask(id){
+  let t = tasks.find(t=>t.id===id);
+  let newText = prompt("Edit Task",t.text);
+  if(newText){
+    t.text=newText;
+    save();render();
+  }
+}
+
+function deleteTask(id){
+  tasks = tasks.filter(t=>t.id!==id);
+  save();render();
+}
+
+function clearAll(){
+  if(confirm("Delete all tasks?")){
+    tasks=[];
+    save();render();
+  }
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme",
+    document.body.classList.contains("dark")?"dark":"light");
+}
+
+function render(){
+  let searchVal = search.value.toLowerCase();
+  taskList.innerHTML="";
+  let filtered = tasks.filter(t=>t.text.toLowerCase().includes(searchVal));
+
+  filtered.forEach(t=>{
+    let li = document.createElement("li");
+    li.className = `${t.priority} ${t.completed?"completed":""}`;
+    li.innerHTML = `
+      <span>
+        <b>${t.text}</b><br>
+        <small>📅 ${t.date}</small>
+      </span>
+      <div class="actions">
+        <i class="fa fa-check" onclick="toggleComplete(${t.id})"></i>
+        <i class="fa fa-edit" onclick="editTask(${t.id})"></i>
+        <i class="fa fa-trash" onclick="deleteTask(${t.id})"></i>
+      </div>`;
+    taskList.appendChild(li);
+  });
+
+  total.textContent = tasks.length;
+  done.textContent = tasks.filter(t=>t.completed).length;
+  pending.textContent = tasks.filter(t=>!t.completed).length;
+}
+
+search.addEventListener("input",render);
+render();
+</script>
+
+</body>
+</html>
